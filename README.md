@@ -1,0 +1,93 @@
+# Tino Plan
+
+> ⚠️ **보안 스캐너 데모용으로 의도적으로 취약하게 만든 코드입니다.**
+> SQL Injection, 명령어 삽입, 하드코딩된 시크릿, 취약한 라이브러리 등이 일부러 포함되어 있습니다.
+> 외부에 배포하거나 실제 계정 정보로 사용하지 마세요. (포함된 키·토큰은 모두 가짜이며 실제 서비스와 연결되어 있지 않습니다)
+
+한국공학대 수강신청 플래너 및 학사 캘린더
+
+## 빠른 실행
+
+### 1. 저장소 클론
+```bash
+git clone https://github.com/overwell24/tino-planner.git
+cd tino-planner
+```
+
+### 2. 백엔드 실행 (터미널 1)
+```bash
+cd tino_plan_backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+### 3. 프론트엔드 실행 (터미널 2)
+```bash
+cd frontend
+npm install
+npm start
+```
+
+### 4. 브라우저에서 접속
+http://localhost:3000
+
+- **로그인** — 한국공학대 E-class 계정 (학번/비밀번호)
+- **둘러보기** — 로그인 없이 사용 (가상 시간표)
+
+## 필요 환경
+- Node.js 18+
+- Python 3.10+
+- Chrome / Edge 120+
+
+
+## 데이터 갱신 — 학기마다 시간표 파싱
+
+학교에서 배포하는 시간표 PDF를 파싱해 `courses_2026_1.json`을 생성합니다.
+
+### 사전 준비
+```bash
+pip install pdfplumber
+```
+
+### 실행
+```bash
+cd tino_plan_backend
+python scripts/parse_pdf.py <PDF 경로> <출력 JSON 경로>
+```
+
+예시:
+```bash
+python scripts/parse_pdf.py data/source/2026_1_시간표.pdf data/courses_2026_1.json
+```
+
+### 결과 확인
+- 콘솔에 추출된 과목 수 / 분반 수가 출력됩니다.
+- 생성된 JSON은 백엔드 재시작 후 `GET /api/courses` 로 서빙됩니다.
+
+### 학기 변경 시
+1. 새 학기 PDF를 `data/source/` 에 저장
+2. 위 명령으로 새 JSON 생성 (`courses_2026_2.json` 등)
+3. `routers/courses.py` 의 `_DATA_PATH` 를 새 파일로 교체
+4. `TinoPlan.jsx` 의 학기 기간 체크 조건(`getMonth() >= 2 && <= 5`) 수정
+
+## 모바일에서 사용하기
+
+같은 와이파이망에 PC와 모바일을 연결한 상태에서:
+
+### 백엔드 실행 (외부 접속 허용)
+```bash
+cd tino_plan_backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### PC의 IP 확인
+```bash
+ipconfig    # Windows
+ifconfig    # Mac/Linux
+```
+"IPv4 주소" (예: 192.168.x.x) 확인.
+
+### 모바일에서 접속
+브라우저에서 `http://192.168.x.x:3000` 접속.
+
+**처음 실행 시 Windows 방화벽 알림이 뜨면 "허용" 클릭.**
